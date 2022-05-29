@@ -17,7 +17,9 @@
               pkgs = import nixpkgs { inherit system; };
               procfile = pkgs.writeText "Procfile"
                 (builtins.concatStringsSep "\n" (builtins.attrValues
-                  (builtins.mapAttrs (name: value: "${name}: ${value.runner}")
+                  (builtins.mapAttrs (name:
+                    { runner, args ? [ ] }:
+                    "${name}: ${runner} ${builtins.concatStringsSep " " args}")
                     services)));
             in {
               foremanWrapper =
