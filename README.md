@@ -20,7 +20,7 @@ The following `flake.nix` contains a configuration as the `unoConfigurations.${s
       let pkgs = import nixpkgs { inherit system; };
       in {
         devShell = pkgs.mkShell {
-          buildInputs = [ uno.packages.${system}.default ];
+          buildInputs = [ uno.packages.${system}.uno ];
         };
         
         unoConfigurations.default = uno.lib.mkUnoConfiguration {

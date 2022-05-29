@@ -8,8 +8,10 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = import nixpkgs { inherit system; };
       in {
-        packages.default =
-          pkgs.writers.writeBashBin "uno" (builtins.readFile ./uno.sh);
+        packages = rec {
+          uno = pkgs.writers.writeBashBin "uno" (builtins.readFile ./uno.sh);
+          default = uno;
+        };
       }) // {
         lib = {
           mkUnoConfiguration = { system, services }:
