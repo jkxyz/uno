@@ -15,15 +15,14 @@
       }) // {
         lib = {
           mkUnoConfiguration = { system, services }:
-            let
-              pkgs = import nixpkgs { inherit system; };
+            let pkgs = import nixpkgs { inherit system; };
+            in rec {
               procfile = pkgs.writeText "Procfile"
                 (builtins.concatStringsSep "\n" (builtins.attrValues
                   (builtins.mapAttrs (name:
-                    { runner, args ? [ ] }:
-                    "${name}: ${runner} ${builtins.concatStringsSep " " args}")
+                    { command }:
+                    "${name}: ${command}")
                     services)));
-            in {
               foremanWrapper =
                 pkgs.writers.writeBashBin "uno-foreman-wrapper" ''
                   exec ${pkgs.foreman}/bin/foreman $@ --procfile ${procfile}
