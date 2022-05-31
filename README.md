@@ -25,9 +25,8 @@ The following `flake.nix` contains a configuration as the `unoConfigurations.${s
         
         unoConfigurations.default = uno.lib.mkUnoConfiguration {
           inherit system;
-          services.postgres = { 
-            runner = "${pkgs.postgresql}/bin/postgres";
-            args = [ "-h" "localhost" ];
+          services.postgres = {
+            command = "${pkgs.postgresql}/bin/postgres -D data/postgres";
           };
         };
       });
