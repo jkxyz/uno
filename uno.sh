@@ -1,11 +1,11 @@
-ACTION="$1"
-SYSTEM=$(nix eval --impure --expr "builtins.currentSystem")
-CONFIG_NAME="${2:-default}"
+set -e
+
+SYSTEM=$(nix eval --impure --expr builtins.currentSystem)
 ROOT=${UNO_ROOT-$PWD}
-FLAKE="path:$ROOT#unoConfigurations.$SYSTEM.$CONFIG_NAME.foremanWrapper"
+PROCFILE_URL="path:$ROOT#unoConfigurations.$SYSTEM.default.procfile"
 
-nix build --no-link $FLAKE
+nix build --no-link $PROCFILE_URL
 
-FOREMAN_WRAPPER="$(nix path-info $FLAKE)/bin/uno-foreman-wrapper"
+PROCFILE=$(nix path-info $PROCFILE_URL)
 
-$FOREMAN_WRAPPER $ACTION --root=${UNO_ROOT-$PWD}
+foreman $@ --root=$ROOT --procfile=$PROCFILE

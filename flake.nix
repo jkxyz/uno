@@ -9,9 +9,24 @@
       let pkgs = import nixpkgs { inherit system; };
       in {
         packages = rec {
-          uno = pkgs.writers.writeBashBin "uno" (builtins.readFile ./uno.sh);
+          uno = pkgs.stdenv.mkDerivation {
+            name = "uno";
+            src = ./.;
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+            installPhase = ''
+              mkdir -p $out/bin
+              cp uno.sh $out/bin/uno
+              chmod +x $out/bin/uno
+              wrapProgram $out/bin/uno \
+               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.foreman ]}
+            '';
+          };
+
           default = uno;
         };
+
+        devShell =
+          pkgs.mkShell { buildInputs = [ self.packages.${system}.uno ]; };
       }) // {
         lib = {
           mkUnoConfiguration = { system, services }:
@@ -19,14 +34,14 @@
             in rec {
               procfile = pkgs.writeText "Procfile"
                 (builtins.concatStringsSep "\n" (builtins.attrValues
-                  (builtins.mapAttrs (name:
-                    { command }:
-                    "${name}: ${command}")
+                  (builtins.mapAttrs (name: { command }: "${name}: ${command}")
                     services)));
-              foremanWrapper =
-                pkgs.writers.writeBashBin "uno-foreman-wrapper" ''
-                  exec ${pkgs.foreman}/bin/foreman $@ --procfile ${procfile}
-                '';
+            };
+
+          mkPostgresService = { system, dataDir, host ? "localhost"
+            , package ? nixpkgs.legacyPackages.${system}.postgresql }: {
+              command =
+                "${package}/bin/postgres -D ${dataDir} -h ${host} -k ''";
             };
         };
       };
