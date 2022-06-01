@@ -36,6 +36,10 @@
                 (builtins.concatStringsSep "\n" (builtins.attrValues
                   (builtins.mapAttrs (name: { command }: "${name}: ${command}")
                     services)));
+
+              start = pkgs.writers.writeBashBin "start" ''
+                exec ${pkgs.foreman}/bin/foreman start --procfile=${procfile} --root=$PWD
+              '';
             };
 
           mkPostgresService = { system, dataDir, host ? "localhost"
