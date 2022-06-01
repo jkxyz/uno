@@ -2,9 +2,10 @@ set -e
 
 SYSTEM=$(nix eval --impure --expr builtins.currentSystem)
 ROOT=${UNO_ROOT-$PWD}
-PROCFILE_URL="path:$ROOT#unoConfigurations.$SYSTEM.default.procfile"
+CONFIG_NAME=default
+PROCFILE_URL=path:$ROOT#unoConfigurations.$SYSTEM.$CONFIG_NAME.procfile
 
-nix build --no-link $PROCFILE_URL
+nix build --out-link .uno/$CONFIG_NAME/Procfile $PROCFILE_URL
 
 PROCFILE=$(nix path-info $PROCFILE_URL)
 

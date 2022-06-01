@@ -12,7 +12,11 @@
       in {
         unoConfigurations.default = uno.lib.mkUnoConfiguration {
           inherit system;
-          services.postgres = { runner = "${pkgs.postgresql}/bin/postgres"; };
+
+          services.postgres = uno.lib.mkPostgresService {
+            inherit system;
+            dataDir = "data/postgres";
+          };
         };
       });
 }
