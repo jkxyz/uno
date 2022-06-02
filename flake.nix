@@ -34,18 +34,36 @@
             in rec {
               procfile = pkgs.writeText "Procfile"
                 (builtins.concatStringsSep "\n" (builtins.attrValues
-                  (builtins.mapAttrs (name: { command }: "${name}: ${command}")
-                    services)));
+                  (builtins.mapAttrs (name:
+                    { command, packages ? [ ], enviroment ? { } }:
+                    let
+                      script = pkgs.writers.writeBash name ''
+                        export PATH="${pkgs.lib.makeBinPath packages}"
+                        ${command}
+                      '';
+                    in "${name}: ${script}") services)));
 
               start = pkgs.writers.writeBashBin "start" ''
                 exec ${pkgs.foreman}/bin/foreman start --procfile=${procfile} --root=$PWD
               '';
             };
 
-          mkPostgresService = { system, dataDir, host ? "localhost"
-            , package ? nixpkgs.legacyPackages.${system}.postgresql }: {
+          mkPostgresService = { system
+            , package ? nixpkgs.legacyPackages.${system}.postgresql, dataDir
+            , host ? "localhost", port ? 5432, initialize ? true
+            , superuser ? "postgres" }:
+            let
+              pkgs = import nixpkgs { inherit system; };
+              initScript = pkgs.writers.writeBash "postgres-init" ''
+                if [ ! -f ${dataDir}/postgresql.conf ]; then
+                  ${package}/bin/initdb --username ${superuser} ${dataDir}
+                fi
+              '';
+            in {
               command =
-                "${package}/bin/postgres -D ${dataDir} -h ${host} -k ''";
+                "${initScript} && ${package}/bin/postgres -D ${dataDir} -h ${host} -p ${
+                  builtins.toString port
+                } -k ''";
             };
         };
       };
