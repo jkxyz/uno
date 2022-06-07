@@ -35,10 +35,14 @@
               procfile = pkgs.writeText "Procfile"
                 (builtins.concatStringsSep "\n" (builtins.attrValues
                   (builtins.mapAttrs (name:
-                    { command, packages ? [ ], enviroment ? { } }:
+                    { command, environment ? { } }:
                     let
+                      exportStatements = builtins.concatStringsSep "\n"
+                        (builtins.attrValues (builtins.mapAttrs
+                          (name: value: ''export ${name}="${value}"'')
+                          environment));
                       script = pkgs.writers.writeBash name ''
-                        export PATH="${pkgs.lib.makeBinPath packages}"
+                        ${exportStatements}
                         ${command}
                       '';
                     in "${name}: ${script}") services)));
