@@ -39,7 +39,7 @@
                     let
                       exportStatements = builtins.concatStringsSep "\n"
                         (builtins.attrValues (builtins.mapAttrs
-                          (name: value: ''export ${name}="${value}"'')
+                          (name: value: ''export ${name}="${builtins.toString value}"'')
                           environment));
                       script = pkgs.writers.writeBash name ''
                         ${exportStatements}
