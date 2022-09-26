@@ -39,7 +39,9 @@ And then start them together from the terminal:
 $ uno start
 ```
 
-That single command installs all prerequisite packages and starts the configuration. When you press Ctrl-C, they'll all be stopped.
+That single command installs all prerequisite packages and starts the configuration with Foreman.
+
+When you press Ctrl-C, they'll all be stopped.
 
 ## Installation
 
