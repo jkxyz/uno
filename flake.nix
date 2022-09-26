@@ -15,7 +15,7 @@
             nativeBuildInputs = [ pkgs.makeWrapper ];
             installPhase = ''
               mkdir -p $out/bin
-              cp uno.sh $out/bin/uno
+              cp uno2.sh $out/bin/uno
               chmod +x $out/bin/uno
               wrapProgram $out/bin/uno \
                --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.foreman ]}
@@ -27,6 +27,15 @@
 
         devShell =
           pkgs.mkShell { buildInputs = [ self.packages.${system}.uno ]; };
+
+        unoConfigurations.example = self.lib.mkUnoConfiguration {
+          inherit system;
+
+          services.echo = {
+            environment = { YOUR_NAME = "World"; };
+            command = "echo Hello, $YOUR_NAME && sleep 5000";
+          };
+        };
       }) // {
         lib = {
           mkUnoConfiguration = { system, services }:
