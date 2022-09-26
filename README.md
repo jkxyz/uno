@@ -1,158 +1,84 @@
-# uno
+# Uno
 
-Uno is a small wrapper around Nix and Foreman for declaratively defining and 
-running development services.
+**Declarative development processes with Nix.**
 
-On the Nix side, Uno provides a flexible configuration system which lets you 
-leverage Nix for whatever simple or complex environment your applications run in:
+Uno is a small wrapper around [Nix](https://github.com/NixOS/nix) – the cross-platform, purely-functional package manager – and [Foreman](https://github.com/ddollar/foreman).
 
-* Running multiple development processes and applications
-* Running multiple versions of Python, Node, Java, etc.
-* Running multiple versions of databases
+* Because Nix is purely-functional, all package versions are pinned in your project, so that everyone runs the same versions. 
 
-This configuration has all the benefits of Nix: it's easy to share and transfer
-between systems and guaranteed to run the same binaries for everyone. Packages
-are not installed into the global environment and will be garbage collected 
-when you delete your Uno configuration.
+* And because you can refer to any pinned package, you can even run multiple versions of programs together, e.g. Postgres 11 and 14.
 
-On the Foreman side, the `uno` command will use the configuration to generate
-a Procfile and run Foreman with your configuration.
+* Everything runs directly on your machine, without the overhead of Docker and VMs.
 
-See `example/flake.nix` for a comprehensive example and starting point.
-
-**STATUS: Alpha. The API and behavior may change at any time.**
-
-## Usage
-
-The following `flake.nix` contains a default configuration as the 
-`unoConfigurations.${system}.default` output, as well as a Nix shell
-which contains NodeJS and the Uno CLI. To enter the shell, run 
-`nix develop` and then `uno start` to start the default services.
+Uno lets you define a set of processes using the Nix language:
 
 ```nix
-{
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    uno.url = "github:jkxyz/uno";
-    uno.inputs.nixpkgs.follows = "nixpkgs";
+uno.lib.mkUnoConfiguration {
+  inherit system;
+  
+  services = {
+    redis.command = "${pkgs.redis}/bin/redis-server --data data/redis";
+    
+    postgres = uno.lib.mkPostgresService {
+      inherit system;
+      dataDir = "data/postgres";
+      superuser = "myuser";
+    };
+    
+    app = {
+      environment = { PORT = 3000; };
+      command = "npm install && npm start";
+    };
   };
-
-  outputs = { self, nixpkgs, flake-utils, uno }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; };
-      in {
-        devShell = pkgs.mkShell {
-          buildInputs = [ 
-            uno.packages.${system}.uno 
-            pkgs.nodejs 
-          ];
-        };
-
-        # Create a configuration with the name "default"
-        unoConfigurations.default = uno.lib.mkUnoConfiguration {
-          # Provide the current system used for initializing nixpkgs
-          inherit system;
-          
-          # Create a Postgres service which will store its data in a relative
-          # directory. initdb will be called before starting the service to 
-          # create the Postgres data and configuration files
-          services.postgres = uno.lib.mkPostgresService {
-            inherit system;
-            dataDir = "data/postgres";
-
-            # Specify a major version package to override the default
-            # package = pkgs.postgresql_14;
-
-            # Change the parameters used to initialize and start
-            # host = "0.0.0.0";
-            # port = 5433;
-            # superuser = "myuser";
-          };
-
-          # Execute a binary from a package with args. With this approach, the
-          # package is not installed into the shell and does not pollute the
-          # global environment
-          services.redis = {
-            command = "${pkgs.redis}/bin/redis-server --dir data/redis";
-          };
-
-          # Execute a binary from the shell environment. With this approach, 
-          # npm is assumed to be installed into the devShell or available on 
-          # the current PATH. This helps to avoid repetition and allows also
-          # using npm to run commands during development
-          services.app = {
-            # Specify environment variables which will be set for the process
-            environment = { PORT = 3000; };
-            command = "npm start";
-          };
-        };
-      });
 }
 ```
 
-### Prerequisites
+And then start them together from the terminal:
 
-Uno only requires Nix to be installed on your system, with the flakes experimental
-feature enabled. Nix is available for macOS and Linux.
+```
+$ uno start
+```
 
-### Installation
+That single command installs all prerequisite packages and starts the configuration. When you press Ctrl-C, they'll all be stopped.
 
-Once you have Nix installed, the recommended way to install Uno is using a 
-`flake.nix` with a `devShell` output in your projects. This has several 
-advantages including making it easy to share your whole development 
-environment. It also ensures that the version of the Uno CLI is the same as 
-the Uno library.
+## Installation
 
-### Flake outputs
+Uno only requires the Nix package manager to be installed. 
 
-* `packages.${system}.uno`
-  Package containing the `uno` executable.
+Instructions for macOS and Linux can be found here: https://nixos.org/download.html
 
-* `lib.mkUnoConfiguration`
-  A function which takes a set describing the services to run and returns
-  a set containing derivations to generate and run the Procfile.
-  
-  * `system`
-    The current system
-  * `services.NAME.command`
-    The command used to start the service
-  * `services.NAME.environment`
-    A set of environment variable names to values. 
-    Default `{}`
-    
-* `lib.mkPostgresService`
-  A function which takes a set describing a Postgres service and returns a
-  service which will initialize and start Postgres.
-  
-  * `system`
-    The current system
-  * `dataDir`
-    The path to the directory containing the Postgres data and configuration files
-  * `package`
-    The package in which to find the Postgres binaries
-    Default: `nixpkgs.legacyPackages.${system}.postgresql`
-  * `host`
-    The hostname to listen on
-    Default: `"localhost"`
-  * `port`
-    The port to listen on
-    Default: `5432`
-  * `initialize`
-    Whether to initialize the dataDir before starting Postgres
-    Default: `true`
-  * `superuser`
-    The superuser to create when initializing
-    Default: `"postgres"`
+You will need to enable Flakes by adding the following line to `~/.config/nix/nix.conf`:
 
-### Command line options
+```
+experimental-features = nix-command flakes
+```
 
-Environment variables:
+There are many other ways to install and configure Nix, so follow the way which works for you.
 
-* `UNO_ROOT`
-  Sets the root directory, which is used for: 1) Finding the `flake.nix` used to 
-  start the configuration, and 2) Resolving relative paths when starting services.
-  Setting this allows you to share the same configuration between multiple projects.
-  For example you might have a file `~/Code/Work/.envrc` which loads a devShell and
-  sets `UNO_ROOT` to `~/Code/Work/nix`. Then you can run Uno from either
-  `~/Code/Work/proj1` or `~/Code/Work/proj2`.
+## Setup
+
+See the [example project](https://github.com/jkxyz/uno/blob/main/example/flake.nix) to get started with setting up your project.
+
+## Usage
+
+Once you have Uno setup, you can start your configuration by running `uno start` in the same directory as your `flake.nix` file.
+
+### Configurations
+
+`uno start` defaults to running the configuration named `default`.
+
+You can create multiple named configurations as outputs on `unoConfigurations.SYSTEM.CONFIG`, and launch them with `uno start CONFIG`.
+
+### Root directory
+
+Uno looks for configurations by finding a `flake.nix` in the root directory. By default this is the current working directory.
+
+To run Uno from a different directory, you can pass the `--root` option or set `UNO_ROOT`. This option also sets the working directory for all of your processes. Using the env var can be useful if you want to share a single configuration between multiple projects.
+
+As long as Uno can find a `flake.nix` with your config, it can start it from anywhere. 
+
+### Offline mode
+
+By default Nix will use an online cache to fetch packages. It re-queries the cache on each run to see if its local files are up to date.
+
+If you're offline, you can pass the `--offline` option to Uno which will skip checking the cache. If you already have everything prefetched then it will start your configuration as normal.
