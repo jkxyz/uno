@@ -156,9 +156,3 @@ Environment variables:
   For example you might have a file `~/Code/Work/.envrc` which loads a devShell and
   sets `UNO_ROOT` to `~/Code/Work/nix`. Then you can run Uno from either
   `~/Code/Work/proj1` or `~/Code/Work/proj2`.
-
-## Todo
-
-* [ ] Improve the CLI with help text and more useful arguments
-* [ ] Figure out a way to pass args like `--offline` to the nix build command
-* [ ] Figure out a way to change the configuration name
