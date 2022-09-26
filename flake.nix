@@ -15,7 +15,7 @@
             nativeBuildInputs = [ pkgs.makeWrapper ];
             installPhase = ''
               mkdir -p $out/bin
-              cp uno2.sh $out/bin/uno
+              cp uno.sh $out/bin/uno
               chmod +x $out/bin/uno
               wrapProgram $out/bin/uno \
                --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.foreman ]}
