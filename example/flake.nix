@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    uno.url = "path:..";
+    uno.url = "github:jkxyz/uno";
     uno.inputs.nixpkgs.follows = "nixpkgs";
   };
 
