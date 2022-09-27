@@ -31,14 +31,14 @@
         unoConfigurations.example = self.lib.mkUnoConfiguration {
           inherit system;
 
-          services.echo = {
+          processes.echo = {
             environment = { YOUR_NAME = "World"; };
             command = "echo Hello, $YOUR_NAME && sleep 5000";
           };
         };
       }) // {
         lib = {
-          mkUnoConfiguration = { system, services }:
+          mkUnoConfiguration = { system, processes }:
             let pkgs = import nixpkgs { inherit system; };
             in rec {
               procfile = pkgs.writeText "Procfile"
@@ -54,7 +54,7 @@
                         ${exportStatements}
                         ${command}
                       '';
-                    in "${name}: ${script}") services)));
+                    in "${name}: ${script}") processes)));
 
               start = pkgs.writers.writeBashBin "start" ''
                 exec ${pkgs.foreman}/bin/foreman start --procfile=${procfile} --root=$PWD

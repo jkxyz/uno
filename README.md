@@ -18,7 +18,7 @@ Uno lets you define a set of processes using the Nix language:
 uno.lib.mkUnoConfiguration {
   inherit system;
   
-  services = {
+  processes = {
     redis.command = "${pkgs.redis}/bin/redis-server --data data/redis";
     
     postgres = uno.lib.mkPostgresService {
