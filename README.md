@@ -4,6 +4,8 @@
 
 Uno is a small wrapper around [Nix](https://github.com/NixOS/nix) – the cross-platform, purely-functional package manager – and [Foreman](https://github.com/ddollar/foreman).
 
+It manages processes in your development environment like databases, CSS watchers, and the app itself.
+
 * Because Nix is purely-functional, all package versions are pinned in your project, so that everyone runs the same versions. 
 
 * And because you can refer to any pinned package, you can even run multiple versions of programs together, e.g. Postgres 11 and 14.
@@ -84,3 +86,7 @@ As long as Uno can find a `flake.nix` with your config, it can start it from any
 By default Nix will use an online cache to fetch packages. It re-queries the cache on each run to see if its local files are up to date.
 
 If you're offline, you can pass the `--offline` option to Uno which will skip checking the cache. If you already have everything prefetched then it will start your configuration as normal.
+
+### Cleaning up
+
+It's good practice to clean up unused packages from the Nix store with `nix-collect-garbage`. To ensure this doesn't delete any packages you're actively using, Uno adds a garbage collection root to your project's directory. If you're finished with Uno and want to clean up the packages you've used, delete the `.uno` directory and run `nix-collect-garbage`.
