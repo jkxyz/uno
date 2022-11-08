@@ -28,7 +28,7 @@
         devShell =
           pkgs.mkShell { buildInputs = [ self.packages.${system}.uno ]; };
 
-        unoConfigurations.example = self.lib.mkUnoConfiguration {
+        unoConfigurations.example = self.lib.configuration {
           inherit system;
 
           processes.echo = {
@@ -38,7 +38,7 @@
         };
       }) // {
         lib = {
-          mkUnoConfiguration = { system, processes }:
+          configuration = { system, processes }:
             let pkgs = import nixpkgs { inherit system; };
             in rec {
               procfile = pkgs.writeText "Procfile"
@@ -47,8 +47,8 @@
                     { command, environment ? { } }:
                     let
                       exportStatements = builtins.concatStringsSep "\n"
-                        (builtins.attrValues (builtins.mapAttrs
-                          (name: value: ''export ${name}="${builtins.toString value}"'')
+                        (builtins.attrValues (builtins.mapAttrs (name: value:
+                          ''export ${name}="${builtins.toString value}"'')
                           environment));
                       script = pkgs.writers.writeBash name ''
                         ${exportStatements}
@@ -61,23 +61,25 @@
               '';
             };
 
-          mkPostgresService = { system
-            , package ? nixpkgs.legacyPackages.${system}.postgresql, dataDir
-            , host ? "localhost", port ? 5432, initialize ? true
-            , superuser ? "postgres" }:
-            let
-              pkgs = import nixpkgs { inherit system; };
-              initScript = pkgs.writers.writeBash "postgres-init" ''
-                if [ ! -f ${dataDir}/postgresql.conf ]; then
-                  ${package}/bin/initdb --username ${superuser} ${dataDir}
-                fi
-              '';
-            in {
-              command =
-                "${initScript} && ${package}/bin/postgres -D ${dataDir} -h ${host} -p ${
-                  builtins.toString port
-                } -k ''";
-            };
+          processes = {
+            postgres = { system
+              , package ? nixpkgs.legacyPackages.${system}.postgresql, dataDir
+              , host ? "localhost", port ? 5432, initialize ? true
+              , superuser ? "postgres" }:
+              let
+                pkgs = import nixpkgs { inherit system; };
+                initScript = pkgs.writers.writeBash "postgres-init" ''
+                  if [ ! -f ${dataDir}/postgresql.conf ]; then
+                    ${package}/bin/initdb --username ${superuser} ${dataDir}
+                  fi
+                '';
+              in {
+                command =
+                  "${initScript} && ${package}/bin/postgres -D ${dataDir} -h ${host} -p ${
+                    builtins.toString port
+                  } -k ''";
+              };
+          };
         };
       };
 }

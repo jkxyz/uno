@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = import nixpkgs { inherit system; };
       in {
-        unoConfigurations.default = uno.lib.mkUnoConfiguration {
+        unoConfigurations.default = uno.lib.configuration {
           inherit system;
 
           processes = {
@@ -19,12 +19,12 @@
               command = "echo Hello, $YOUR_NAME && sleep 5000";
             };
 
-            postgres = uno.lib.mkPostgresService {
+            postgres = uno.lib.processes.postgres {
               inherit system;
               dataDir = "data/postgres";
             };
 
-            postgres13 = uno.lib.mkPostgresService {
+            postgres13 = uno.lib.processes.postgres {
               inherit system;
               package = pkgs.postgresql_13;
               dataDir = "data/postgres13";
