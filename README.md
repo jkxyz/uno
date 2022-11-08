@@ -15,13 +15,13 @@ It manages processes in your development environment like databases, CSS watcher
 Uno lets you define a set of processes using the Nix language:
 
 ```nix
-uno.lib.mkUnoConfiguration {
+uno.lib.configuration {
   inherit system;
   
   processes = {
     redis.command = "${pkgs.redis}/bin/redis-server --data data/redis";
     
-    postgres = uno.lib.mkPostgresService {
+    postgres = uno.lib.processes.postgres {
       inherit system;
       dataDir = "data/postgres";
       superuser = "myuser";
