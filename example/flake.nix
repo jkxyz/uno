@@ -13,21 +13,23 @@
         unoConfigurations.default = uno.lib.mkUnoConfiguration {
           inherit system;
 
-          processes.echo = {
-            environment = { YOUR_NAME = "World"; };
-            command = "echo Hello, $YOUR_NAME && sleep 5000";
-          };
+          processes = {
+            echo = {
+              environment = { YOUR_NAME = "World"; };
+              command = "echo Hello, $YOUR_NAME && sleep 5000";
+            };
 
-          processes.postgres = uno.lib.mkPostgresService {
-            inherit system;
-            dataDir = "data/postgres";
-          };
+            postgres = uno.lib.mkPostgresService {
+              inherit system;
+              dataDir = "data/postgres";
+            };
 
-          processes.postgres13 = uno.lib.mkPostgresService {
-            inherit system;
-            package = pkgs.postgresql_13;
-            dataDir = "data/postgres13";
-            port = 5433;
+            postgres13 = uno.lib.mkPostgresService {
+              inherit system;
+              package = pkgs.postgresql_13;
+              dataDir = "data/postgres13";
+              port = 5433;
+            };
           };
         };
       });
